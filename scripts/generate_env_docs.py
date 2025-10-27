@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate environment variable documentation from constants.py
-Extracts descriptions from inline comments
+Updates README.md with the table between markers
 """
 
 import ast
@@ -51,6 +51,62 @@ def extract_env_vars_with_comments(file_path: str) -> List[Tuple[str, any, Optio
     
     return env_vars
 
+def generate_markdown_table(env_vars: List[Tuple]) -> str:
+    """Generate markdown table as string"""
+    lines = []
+    lines.append("| Variable | Default | Description |")
+    lines.append("|----------|---------|-------------|")
+    
+    for var_name, default, description in sorted(env_vars, key=lambda x: x[0]):
+        default_str = str(default) if default is not None else "*Required*"
+        desc_str = description if description else ""
+        lines.append(f"| `{var_name}` | `{default_str}` | {desc_str} |")
+    
+    return '\n'.join(lines)
+
+def update_readme_section(readme_path: str, table_content: str, 
+                         start_marker: str = "<!-- ENV_VARS_START -->",
+                         end_marker: str = "<!-- ENV_VARS_END -->") -> bool:
+    """
+    Update a section of README.md between markers
+    
+    Args:
+        readme_path: Path to README.md
+        table_content: The table content to insert
+        start_marker: Start marker comment
+        end_marker: End marker comment
+    
+    Returns:
+        True if updated, False if markers not found
+    """
+    readme_file = Path(readme_path)
+    
+    if not readme_file.exists():
+        print(f"Warning: {readme_path} not found, creating new file")
+        content = f"{start_marker}\n{table_content}\n{end_marker}\n"
+        readme_file.write_text(content)
+        return True
+    
+    content = readme_file.read_text()
+    
+    # Check if markers exist
+    if start_marker not in content or end_marker not in content:
+        print(f"Warning: Markers not found in {readme_path}")
+        print(f"Add the following markers to your README where you want the table:")
+        print(f"\n{start_marker}")
+        print(f"{end_marker}\n")
+        return False
+    
+    # Replace content between markers
+    pattern = f"{re.escape(start_marker)}.*?{re.escape(end_marker)}"
+    replacement = f"{start_marker}\n{table_content}\n{end_marker}"
+    
+    new_content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+    
+    # Write back
+    readme_file.write_text(new_content)
+    return True
+
 def generate_env_file(env_vars: List[Tuple], output_path: str = '.env.example'):
     """Generate .env.example file with descriptions"""
     with open(output_path, 'w') as f:
@@ -58,64 +114,57 @@ def generate_env_file(env_vars: List[Tuple], output_path: str = '.env.example'):
         f.write("# Copy this to .env and customize\n\n")
         
         for var_name, default, description in sorted(env_vars, key=lambda x: x[0]):
-            # Write description if available
             if description:
                 f.write(f"# {description}\n")
             
-            # Write default value info
             if default is not None:
                 f.write(f"# Default: {default}\n")
             else:
                 f.write(f"# Required (no default)\n")
             
-            # Write the variable
             default_str = str(default) if default is not None else ""
             f.write(f"{var_name}={default_str}\n\n")
 
-def generate_markdown(env_vars: List[Tuple], output_path: str = 'ENV_VARS.md'):
-    """Generate markdown documentation"""
-    with open(output_path, 'w') as f:
-        f.write("# Environment Variables\n\n")
-        f.write("| Variable | Default | Description |\n")
-        f.write("|----------|---------|-------------|\n")
-        
-        for var_name, default, description in sorted(env_vars, key=lambda x: x[0]):
-            default_str = str(default) if default is not None else "*Required*"
-            desc_str = description if description else ""
-            f.write(f"| `{var_name}` | `{default_str}` | {desc_str} |\n")
-
-def generate_table(env_vars: List[Tuple]):
-    """Print as table to console"""
-    print("\nEnvironment Variables:\n")
-    print(f"{'Variable':<35} {'Default':<20} Description")
-    print("-" * 100)
-    
-    for var_name, default, description in sorted(env_vars, key=lambda x: x[0]):
-        default_str = str(default) if default is not None else "Required"
-        desc_str = description[:40] if description else ""
-        print(f"{var_name:<35} {default_str:<20} {desc_str}")
-
 def main():
     constants_file = 'src/utility/constants.py'
+    readme_file = 'README.md'
     
     if not Path(constants_file).exists():
         print(f"Error: {constants_file} not found")
-        return
+        return 1
+    
+    print("=" * 60)
+    print("Environment Variable Documentation Generator")
+    print("=" * 60 + "\n")
     
     # Extract environment variables
+    print(f"Reading {constants_file}...")
     env_vars = extract_env_vars_with_comments(constants_file)
+    print(f"Found {len(env_vars)} environment variables\n")
+    
+    # Generate markdown table
+    print("Generating markdown table...")
+    table_content = generate_markdown_table(env_vars)
+    
+    # Update README.md
+    print(f"Updating {readme_file}...")
+    if update_readme_section(readme_file, table_content):
+        print(f"Updated {readme_file}")
+    else:
+        print(f"Failed to update {readme_file}")
+        return 1
     
     # Generate .env.example
+    print(f"\nGenerating .env.example...")
     generate_env_file(env_vars, '.env.example')
+    print(f"Generated .env.example")
     
-    # Generate markdown documentation
-    generate_markdown(env_vars, 'ENV_VARS.md')
+    print("\n" + "=" * 60)
+    print("Documentation generation complete")
+    print("=" * 60)
     
-    # Print to console
-    generate_table(env_vars)
-    
-    print(f"\nGenerated .env.example with {len(env_vars)} variables")
-    print(f"Generated ENV_VARS.md")
+    return 0
 
 if __name__ == '__main__':
-    main()
+    import sys
+    sys.exit(main())
