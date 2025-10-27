@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+# .git/hooks/pre-commit
+
+import subprocess
+import sys
+from pathlib import Path
+
+def get_staged_files():
+    """Get list of staged files"""
+    result = subprocess.run(
+        ['git', 'diff', '--cached', '--name-only'],
+        capture_output=True,
+        text=True
+    )
+    return result.stdout.strip().split('\n') if result.stdout else []
+
+def file_exists_in_repo(filepath):
+    """Check if file exists in git repo"""
+    result = subprocess.run(
+        ['git', 'ls-files', '--error-unmatch', filepath],
+        capture_output=True
+    )
+    return result.returncode == 0
+
+def generate_env_docs():
+    """Generate environment variable documentation"""
+    script_path = Path(__file__).parent.parent.parent / 'scripts' / 'generate_env_docs.py'
+    
+    if not script_path.exists():
+        print(f"Warning: {script_path} not found, skipping env docs generation")
+        return True
+    
+    result = subprocess.run(['python3', str(script_path)], capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        print("Failed to generate environment documentation:")
+        print(result.stderr)
+        return False
+    
+    print(result.stdout)
+    return True
+
+def stage_generated_files():
+    """Stage generated documentation files if they changed"""
+    files_to_check = ['.env.example', 'ENV_VARS.md']
+    files_changed = []
+    
+    for filepath in files_to_check:
+        if Path(filepath).exists():
+            # Check if file has unstaged changes
+            result = subprocess.run(
+                ['git', 'diff', '--name-only', filepath],
+                capture_output=True,
+                text=True
+            )
+            
+            if result.stdout.strip():
+                files_changed.append(filepath)
+    
+    if files_changed:
+        print("\nStaging generated files:")
+        for filepath in files_changed:
+            subprocess.run(['git', 'add', filepath])
+            print(f"{filepath}")
+        return True
+    
+    return False
+
+def main():
+    print("=" * 60)
+    print("Pre-commit: Environment Documentation Generator")
+    print("=" * 60)
+    
+    staged_files = get_staged_files()
+    
+    # Check if constants.py is being committed
+    if 'src/utility/constants.py' not in staged_files:
+        print("constants.py not modified, skipping")
+        return 0
+    
+    print("constants.py modified, regenerating documentation...\n")
+    
+    # Generate documentation
+    if not generate_env_docs():
+        print("\nPre-commit hook failed")
+        return 1
+    
+    # Stage generated files
+    if stage_generated_files():
+        print("\nGenerated files added to commit")
+    else:
+        print("\nNo changes to generated files")
+    
+    print("=" * 60)
+    return 0
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print("\nInterrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\nPre-commit hook failed: {e}")
+        sys.exit(1)

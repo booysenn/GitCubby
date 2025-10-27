@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+from utility import GCBackup
+
+if __name__ == '__main__':
+    gcb = GCBackup()
+    gcb.perform_backup()

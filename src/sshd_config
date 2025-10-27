@@ -1,0 +1,22 @@
+PubkeyAuthentication yes
+AuthorizedKeysFile	.ssh/authorized_keys
+PasswordAuthentication no
+AllowTcpForwarding no
+GatewayPorts no
+X11Forwarding no
+PermitUserEnvironment yes
+Subsystem	sftp	/usr/lib/ssh/sftp-server
+
+# Logging configuration
+SyslogFacility AUTH
+LogLevel VERBOSE
+
+# Log successful logins
+LoginGraceTime 2m
+PermitRootLogin no
+StrictModes yes
+MaxAuthTries 6
+MaxSessions 10
+
+Match User git
+    PubkeyAuthentication yes
