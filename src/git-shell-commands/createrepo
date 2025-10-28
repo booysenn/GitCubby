@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+#HELP [private|public] [REPO_NAME] create a git repo
+
+import sys
+from pathlib import Path
+import git
+
+from utility import PRIVATE_REPO_ROOT, PUBLIC_REPO_ROOT, UserInterface
+
+def main():
+    # Check arguments
+    if len(sys.argv) != 3 or sys.argv[1] not in {"private", "public"}:
+        print(f"Usage: {Path(sys.argv[0]).name} [private|public] REPO_NAME")
+        sys.exit(1)
+    
+    repo_type = sys.argv[1]
+    repo_name = sys.argv[2]
+
+    # Create repository path based on type
+    repo_root = PUBLIC_REPO_ROOT if repo_type == "public" else PRIVATE_REPO_ROOT
+    git_repo = Path(repo_root) / repo_name
+    
+    # Check if repository already exists
+    if git_repo.exists():
+        UserInterface().print_error_and_exit("Repository already exists!")
+    
+    # Create parent directory if needed
+    git_repo.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Initialize bare git repository using GitPython
+    try:
+        git.Repo.init(str(git_repo), bare=True)
+    except Exception as e:
+        UserInterface().print_error_and_exit(f"Failed to create repository: {e}")
+    
+    print("Repository created successfully!")
+    UserInterface().print_repo_urls(repo_type, repo_name, title="You can now clone it")
+
+if __name__ == '__main__':
+    main()

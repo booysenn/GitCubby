@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+#HELP show available commands and current user
+
+import os
+from pathlib import Path
+
+from utility import UserInterface
+
+def main():
+    # Get current user from environment
+    git_user = os.environ.get('GIT_USER', 'unknown')
+    
+    # Display welcome message
+    print()
+    UserInterface().print_colored(4, f"=== Git Shell - Logged in as: {git_user} ===")
+    print()
+    
+    # Get all available commands
+    commands_dir = Path('/home/git/git-shell-commands')
+    
+    if not commands_dir.exists():
+        print("No commands available.")
+        return
+    
+    print("-" * 50)
+    
+    # List all executable files in git-shell-commands
+    commands = []
+    for cmd_file in sorted(commands_dir.iterdir()):
+        if cmd_file.is_file() and os.access(cmd_file, os.X_OK):
+            # Try to extract help text from #HELP comment
+            help_text = ""
+            try:
+                with open(cmd_file, 'r') as f:
+                    for line in f:
+                        if line.startswith('#HELP'):
+                            help_text = line.replace('#HELP', '').strip()
+                            break
+            except Exception:
+                pass
+            
+            commands.append((cmd_file.name, help_text))
+    
+    # Display commands with their help text
+    for cmd_name, help_text in commands:
+        UserInterface().print_colored(5, f"  {cmd_name:<20}", end="")
+        if help_text:
+            print(f" - {help_text}")
+        else:
+            print()
+
+    print("-" * 50)
+    print()
+    UserInterface().print_success("Type a command name to execute it, or 'exit' to disconnect.")
+    print()
+
+if __name__ == '__main__':
+    main()

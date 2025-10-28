@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+#HELP [private|public] [REPO_NAME] show clone URLs for a git repo
+
+import sys
+from pathlib import Path
+
+from utility import PRIVATE_REPO_ROOT, PUBLIC_REPO_ROOT, UserInterface
+
+def main():
+    # Check arguments
+    if len(sys.argv) != 3 or sys.argv[1] not in {"private", "public"}:
+        print(f"Usage: {Path(sys.argv[0]).name} [private|public] REPO_NAME")
+        sys.exit(1)
+    
+    repo_type = sys.argv[1]
+    repo_name = sys.argv[2]
+
+    # Create repository path based on type
+    repo_root = PUBLIC_REPO_ROOT if repo_type == "public" else PRIVATE_REPO_ROOT
+    git_repo = Path(repo_root) / repo_name
+    
+    # Check if repository exists
+    if not git_repo.exists():
+        UserInterface().print_error_and_exit(f"Repository '{repo_type}/{repo_name}' does not exist!")
+    
+    # Confirm it's a git repository
+    if not (git_repo / 'config').exists():
+        UserInterface().print_error_and_exit(f"'{repo_type}/{repo_name}' is not a valid git repository!")
+    
+    # Display repository clone URLs using the reusable function
+    UserInterface().print_repo_urls(repo_type, repo_name)
+
+if __name__ == '__main__':
+    main()

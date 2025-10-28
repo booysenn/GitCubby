@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+#HELP [private|public] [OLD_NAME] [NEW_NAME] rename a git repo
+
+import sys
+from pathlib import Path
+
+from utility import PRIVATE_REPO_ROOT, PUBLIC_REPO_ROOT, UserInterface
+
+def main():
+    # Check arguments
+    if len(sys.argv) != 4 or sys.argv[1] not in {"private", "public"}:
+        print(f"Usage: {Path(sys.argv[0]).name} [private|public] OLD_NAME NEW_NAME")
+        sys.exit(1)
+    
+    repo_type = sys.argv[1]
+    old_name = sys.argv[2]
+    new_name = sys.argv[3]
+
+    # Create repository paths based on type
+    repo_root = PUBLIC_REPO_ROOT if repo_type == "public" else PRIVATE_REPO_ROOT
+    old_repo = Path(repo_root) / old_name
+    new_repo = Path(repo_root) / new_name
+    
+    # Check if old repository exists
+    if not old_repo.exists():
+        UserInterface().print_error_and_exit(f"Repository '{old_name}' does not exist!")
+    
+    # Confirm it's a git repository
+    if not (old_repo / 'config').exists():
+        UserInterface().print_error_and_exit(f"'{old_name}' is not a valid git repository!")
+    
+    # Check if new repository name already exists
+    if new_repo.exists():
+        UserInterface().print_error_and_exit(f"Repository '{new_name}' already exists!")
+    
+    # Rename the repository
+    try:
+        old_repo.rename(new_repo)
+        UserInterface().print_success(f"Repository renamed from '{old_name}' to '{new_name}'")
+        UserInterface().print_repo_urls(repo_type, new_name)
+    except Exception as e:
+        UserInterface().print_error_and_exit(f"Failed to rename repository: {e}")
+
+if __name__ == '__main__':
+    main()

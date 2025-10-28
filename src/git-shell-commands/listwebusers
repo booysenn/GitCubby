@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+#HELP list all users for HTTP/S access
+
+import sys
+from pathlib import Path
+
+from utility import UserInterface, HTDIGEST_FILE, REALM
+
+def main():
+    htdigest_file = Path(HTDIGEST_FILE)
+    
+    # Check if htdigest file exists
+    if not htdigest_file.exists():
+        print("\nNo users configured yet.\n")
+        return
+    
+    # Read all lines
+    try:
+        with open(htdigest_file, 'r') as f:
+            lines = f.readlines()
+    except Exception as e:
+        print(f"Error reading users file: {e}")
+        sys.exit(1)
+    
+    # Extract users from the git realm
+    # htdigest format: username:realm:hash
+    users = []
+    for line in lines:
+        line = line.strip()
+        if line:
+            parts = line.split(':')
+            if len(parts) >= 2 and parts[1] == REALM:
+                users.append(parts[0])
+    
+    # Display users
+    if users:
+        print(f"\nHTTPS Users:")
+        print("-" * 50)
+        for username in sorted(users):
+            UserInterface().print_colored(5, f"  {username}")
+        print(f"\nTotal: {len(users)} user(s)\n")
+    else:
+        print(f"\nNo users found.\n")
+
+if __name__ == '__main__':
+    main()

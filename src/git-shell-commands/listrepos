@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+#HELP list all available repositories
+
+from pathlib import Path
+import os
+
+from utility import PRIVATE_REPO_ROOT, PUBLIC_REPO_ROOT, EXTERNAL_GIT_SSH_URL, EXTERNAL_GIT_HTTP_URL, UserInterface
+
+def main():
+    # Check both private and public repositories
+    repo_types = [
+        ('private', Path(PRIVATE_REPO_ROOT)),
+        ('public', Path(PUBLIC_REPO_ROOT))
+    ]
+    
+    found_repos = False
+    
+    for repo_type, repo_root in repo_types:
+        if not repo_root.exists():
+            continue
+        
+        # Find all config files (indicates a git repository)
+        config_files = sorted(repo_root.rglob('config'))
+        
+        if config_files:
+            if not found_repos:
+                print()
+            found_repos = True
+            print(f"{repo_type.upper()} Repositories:")
+            print("-" * 70)
+            
+            for config_file in config_files:
+                folder = config_file.parent
+                # Get relative path from repo root
+                repo_name = str(folder.relative_to(repo_root))
+                
+                # Print repo name and both URLs on one line
+                UserInterface().print_colored(5, f"  {repo_name:<20}", end="")
+                print(f" SSH: git clone {EXTERNAL_GIT_SSH_URL}/{repo_type}/{repo_name}  |  HTTPS: git clone {EXTERNAL_GIT_HTTP_URL}/{repo_type}/{repo_name}")
+            
+            print()
+    
+    if not found_repos:
+        print("\nNo repositories found.\n")
+
+if __name__ == '__main__':
+    main()

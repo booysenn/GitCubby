@@ -26,6 +26,7 @@ COPY src/sshd_config /etc/ssh/sshd_config
 COPY src/git-shell-commands /home/git/git-shell-commands
 COPY /src/bin /usr/local/bin
 COPY /src/utility /usr/local/bin/utility
+COPY /src/shell_utility /usr/local/bin/shell_utility
 
 # Create git group and user, add git to lighttpd group
 RUN addgroup -S git && \
@@ -48,7 +49,8 @@ RUN addgroup -S git && \
     touch /var/log/git/access.log && \
     chown -R git:git /var/log/git && \
     chmod 755 /var/log/ssh /var/log/git && \
-    chmod 666 /var/log/ssh/auth.log /var/log/git/access.log
+    chmod 666 /var/log/ssh/auth.log /var/log/git/access.log && \
+    ln -s /usr/local/bin/shell_utility /home/git/git-shell-commands/utility
 
 RUN echo -n "" > /etc/motd
 

@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+#HELP [USERNAME] remove a user from HTTP/S access
+
+import sys
+from pathlib import Path
+
+from utility import UserInterface, HTDIGEST_FILE, REALM
+
+def main():
+    # Check arguments
+    if len(sys.argv) != 2:
+        print(f"Usage: {Path(sys.argv[0]).name} USERNAME")
+        sys.exit(1)
+    
+    username = sys.argv[1]
+    
+    htdigest_file = Path(HTDIGEST_FILE)
+    
+    # Check if htdigest file exists
+    if not htdigest_file.exists():
+        UserInterface().print_error_and_exit("No users file found!")
+    
+    # Read all lines
+    try:
+        with open(htdigest_file, 'r') as f:
+            lines = f.readlines()
+    except Exception as e:
+        UserInterface().print_error_and_exit(f"Failed to read users file: {e}")
+    
+    # Filter out the user to delete
+    # htdigest format: username:realm:hash
+    user_entry = f"{username}:{REALM}:"
+    new_lines = [line for line in lines if not line.startswith(user_entry)]
+    
+    # Check if user was found
+    if len(new_lines) == len(lines):
+        UserInterface().print_error_and_exit(f"User '{username}' not found.")
+    
+    # Write back the filtered lines
+    try:
+        with open(htdigest_file, 'w') as f:
+            f.writelines(new_lines)
+        
+        UserInterface().print_success(f"User '{username}' has been deleted successfully!")
+        
+    except Exception as e:
+        UserInterface().print_error_and_exit(f"Failed to update users file: {e}")
+
+if __name__ == '__main__':
+    main()

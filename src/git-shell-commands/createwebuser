@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+#HELP [USERNAME] create or update a user for HTTP/S access
+
+import sys
+import subprocess
+from pathlib import Path
+
+from utility import HTDIGEST_FILE, REALM, UserInterface
+
+def main():
+    # Check arguments
+    if len(sys.argv) != 2:
+        print(f"Usage: {Path(sys.argv[0]).name} USERNAME")
+        sys.exit(1)
+    
+    username = sys.argv[1]
+    
+    # Validate username (alphanumeric, dash, underscore only)
+    if not username.replace('-', '').replace('_', '').isalnum():
+        UserInterface().print_error_and_exit("Username must contain only letters, numbers, dash, and underscore!")
+    
+    # Check if htdigest command is available
+    htdigest_path = '/usr/bin/htdigest'
+    if not Path(htdigest_path).exists():
+        UserInterface().print_error_and_exit("htdigest command not found. Install apache2-utils package.")
+    
+    # Ensure htdigest file exists
+    htdigest_file = Path(HTDIGEST_FILE)
+    if not htdigest_file.exists():
+        htdigest_file.touch()
+        htdigest_file.chmod(0o640)
+    
+    # Run htdigest command (will prompt for password)
+    print(f"Creating/updating user '{username}'")
+    print("Please enter password when prompted:")
+    
+    try:
+        result = subprocess.run(
+            [htdigest_path, HTDIGEST_FILE, REALM, username],
+            check=True
+        )
+        
+        if result.returncode == 0:
+            UserInterface().print_success(f"User '{username}' has been created/updated successfully!")
+        
+    except subprocess.CalledProcessError as e:
+        UserInterface().print_error_and_exit(f"Failed to create/update user: {e}")
+    except KeyboardInterrupt:
+        UserInterface().print_error_and_exit("\nOperation cancelled by user.")
+
+if __name__ == '__main__':
+    main()
