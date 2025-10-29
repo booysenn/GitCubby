@@ -1,6 +1,7 @@
 import sys
 
 from .constants import EXTERNAL_GIT_SSH_URL, EXTERNAL_GIT_HTTP_URL
+from .util import clean_repo_name
 
 
 class UserInterface():
@@ -24,7 +25,7 @@ class UserInterface():
             repo_name: Repository name
             title: Optional title to display (default: "Clone URLs")
         """
-        print(f"\nRepository: {repo_type}/{repo_name}")
+        print(f"\nRepository: {clean_repo_name(repo_name)} ({repo_type})")
         print("=" * 50)
         
         if title:

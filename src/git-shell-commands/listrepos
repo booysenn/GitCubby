@@ -4,7 +4,7 @@
 from pathlib import Path
 import os
 
-from utility import PRIVATE_REPO_ROOT, PUBLIC_REPO_ROOT, EXTERNAL_GIT_SSH_URL, EXTERNAL_GIT_HTTP_URL, UserInterface
+from utility import PRIVATE_REPO_ROOT, PUBLIC_REPO_ROOT, EXTERNAL_GIT_SSH_URL, EXTERNAL_GIT_HTTP_URL, UserInterface, clean_repo_name
 
 def main():
     # Check both private and public repositories
@@ -33,9 +33,10 @@ def main():
                 folder = config_file.parent
                 # Get relative path from repo root
                 repo_name = str(folder.relative_to(repo_root))
+                repo_name_clean = clean_repo_name(repo_name)
                 
                 # Print repo name and both URLs on one line
-                UserInterface().print_colored(5, f"  {repo_name:<20}", end="")
+                UserInterface().print_colored(5, f"  {repo_name_clean:<20}", end="")
                 print(f" SSH: git clone {EXTERNAL_GIT_SSH_URL}/{repo_type}/{repo_name}  |  HTTPS: git clone {EXTERNAL_GIT_HTTP_URL}/{repo_type}/{repo_name}")
             
             print()

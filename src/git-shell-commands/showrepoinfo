@@ -13,7 +13,8 @@ def main():
         sys.exit(1)
     
     repo_type = sys.argv[1]
-    repo_name = sys.argv[2]
+    repo_name_clean = sys.argv[2]
+    repo_name = f"{repo_name_clean}.git"
 
     # Create repository path based on type
     repo_root = PUBLIC_REPO_ROOT if repo_type == "public" else PRIVATE_REPO_ROOT
@@ -21,11 +22,11 @@ def main():
     
     # Check if repository exists
     if not git_repo.exists():
-        UserInterface().print_error_and_exit(f"Repository '{repo_type}/{repo_name}' does not exist!")
+        UserInterface().print_error_and_exit(f"Repository '{repo_type}/{repo_name_clean}' does not exist!")
     
     # Confirm it's a git repository
     if not (git_repo / 'config').exists():
-        UserInterface().print_error_and_exit(f"'{repo_type}/{repo_name}' is not a valid git repository!")
+        UserInterface().print_error_and_exit(f"'{repo_type}/{repo_name_clean}' is not a valid git repository!")
     
     # Display repository clone URLs using the reusable function
     UserInterface().print_repo_urls(repo_type, repo_name)

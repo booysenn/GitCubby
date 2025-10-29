@@ -14,7 +14,8 @@ def main():
         sys.exit(1)
     
     repo_type = sys.argv[1]
-    repo_name = sys.argv[2]
+    repo_name_clean = sys.argv[2]
+    repo_name = f"{repo_name_clean}.git"
 
     # Create repository path based on type
     repo_root = PUBLIC_REPO_ROOT if repo_type == "public" else PRIVATE_REPO_ROOT
@@ -31,7 +32,7 @@ def main():
     # Remove the repository
     try:
         shutil.rmtree(git_repo)
-        UserInterface().print_success(f"Repository '{repo_type}/{repo_name}' has been removed.")
+        UserInterface().print_success(f"Repository '{repo_type}/{repo_name_clean}' has been removed.")
     except Exception as e:
         UserInterface().print_error_and_exit(f"Failed to remove repository: {e}")
 

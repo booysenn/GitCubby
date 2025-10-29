@@ -13,8 +13,10 @@ def main():
         sys.exit(1)
     
     repo_type = sys.argv[1]
-    old_name = sys.argv[2]
-    new_name = sys.argv[3]
+    old_name_clean = sys.argv[2]
+    old_name = f"{old_name_clean}.git"
+    new_name_clean = sys.argv[3]
+    new_name = f"{new_name_clean}.git"
 
     # Create repository paths based on type
     repo_root = PUBLIC_REPO_ROOT if repo_type == "public" else PRIVATE_REPO_ROOT
@@ -23,20 +25,20 @@ def main():
     
     # Check if old repository exists
     if not old_repo.exists():
-        UserInterface().print_error_and_exit(f"Repository '{old_name}' does not exist!")
+        UserInterface().print_error_and_exit(f"Repository '{old_name_clean}' does not exist!")
     
     # Confirm it's a git repository
     if not (old_repo / 'config').exists():
-        UserInterface().print_error_and_exit(f"'{old_name}' is not a valid git repository!")
+        UserInterface().print_error_and_exit(f"'{old_name_clean}' is not a valid git repository!")
     
     # Check if new repository name already exists
     if new_repo.exists():
-        UserInterface().print_error_and_exit(f"Repository '{new_name}' already exists!")
+        UserInterface().print_error_and_exit(f"Repository '{new_name_clean}' already exists!")
     
     # Rename the repository
     try:
         old_repo.rename(new_repo)
-        UserInterface().print_success(f"Repository renamed from '{old_name}' to '{new_name}'")
+        UserInterface().print_success(f"Repository renamed from '{old_name_clean}' to '{new_name_clean}'")
         UserInterface().print_repo_urls(repo_type, new_name)
     except Exception as e:
         UserInterface().print_error_and_exit(f"Failed to rename repository: {e}")
