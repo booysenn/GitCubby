@@ -50,7 +50,8 @@ RUN addgroup -S git && \
     chown -R git:git /var/log/git && \
     chmod 755 /var/log/ssh /var/log/git && \
     chmod 666 /var/log/ssh/auth.log /var/log/git/access.log && \
-    ln -s /usr/local/bin/shell_utility /home/git/git-shell-commands/utility
+    ln -s /usr/local/bin/shell_utility /home/git/git-shell-commands/utility && \
+    git config --system init.defaultBranch main
 
 RUN echo -n "" > /etc/motd
 
